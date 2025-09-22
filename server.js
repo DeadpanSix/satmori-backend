@@ -1,13 +1,18 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const knex = require('knex');
+const knexConfig = require('./knexfile');
 
 const app = express();
 const port = 3000;
 
+// Initialize Knex.js with your development configuration
+const db = knex(knexConfig.development);
+
 // Enable CORS (for Angular localhost:4200)
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '6mb' }));
 
 //  In-memory DB
 let comments = [
@@ -20,34 +25,42 @@ let comments = [
 ]
 
 // Routes
-app.get('/', (req, res) => {
-  res.send('Hello World!');
-});
-
-app.post('/api/comments', (req, res) => {
-  if (!req.body.name || !req.body.stars || !req.body.comment) {
-    return res.status(400).json({ error: 'All fields are required.' });
+app.post('/api/comments', async (req, res) => {
+    // Validate that all required fields are present
+  if (!req.body.name || !req.body.rating || !req.body.comment || !req.body.photo) {
+    return res.status(400).json({ error: 'All fields are required: name, rating, comment, and photo.' });
   }
 
-  // You could also add more specific validation, like for the 'stars' field
-  if (isNaN(req.body.stars) || req.body.stars < 1 || req.body.stars > 4) {
-    return res.status(400).json({ error: 'Stars must be a number between 1 and 4.' });
+  // Validate the rating field
+  const rating = parseInt(req.body.rating);
+  if (isNaN(rating) || rating < 1 || rating > 4) {
+    return res.status(400).json({ error: 'Rating must be a number between 1 and 4.' });
   }
 
-  const newComment= {
-    name : req.body.name,
-    stars : req.body.stars,
-    comment : req.body.comment,
-    date : Date.now()
-  };
+  try {
+    const [newComment] = await db('comments').insert({
+      user_name: req.body.name,
+      rating: parseInt(req.body.rating),
+      comment_text: req.body.comment,
+      photo_data: req.body.photo
+    }).returning('*');
 
-  comment.push(newComment);
-  res.status(201).json(comment);
+    res.status(201).json(newComment);
+  } catch (error) {
+    console.error('Error inserting comment:', error);
+    res.status(500).json({ error: 'Failed to add comment.' });
+  }
 });
 
-// GET ALL
-app.get('/api/comments', (req, res) => {
-  res.json(comments);
+// GET ALL comments from the database
+app.get('/api/comments', async (req, res) => {
+  try {
+    const comments = await db('comments').select('*');
+    res.json(comments);
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ error: 'Failed to retrieve comments.' });
+  }
 });
 
 // GET by ID
