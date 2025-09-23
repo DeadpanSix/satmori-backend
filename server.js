@@ -25,16 +25,16 @@ let comments = [
 ]
 
 // Routes
-app.post('/api/comments', async (req, res) => {
+app.post('/api/comments/comment', async (req, res) => {
     // Validate that all required fields are present
   if (!req.body.name || !req.body.rating || !req.body.comment || !req.body.photo) {
-    return res.status(400).json({ error: 'All fields are required: name, rating, comment, and photo.' });
+    return res.status(400).json({ error: 'Todos los campos son requeridos: nombre, valoración, experiencia y foto.' });
   }
 
   // Validate the rating field
   const rating = parseInt(req.body.rating);
   if (isNaN(rating) || rating < 1 || rating > 4) {
-    return res.status(400).json({ error: 'Rating must be a number between 1 and 4.' });
+    return res.status(400).json({ error: 'Valoración debe estar entre rango 1 y 4.' });
   }
 
   try {
@@ -53,10 +53,22 @@ app.post('/api/comments', async (req, res) => {
 });
 
 // GET ALL comments from the database
-app.get('/api/comments', async (req, res) => {
+app.get('/api/comments/comments', async (req, res) => {
   try {
     const comments = await db('comments').select('*');
-    res.json(comments);
+
+    // Convert the binary data (photo_data) to a Base64 string
+    const formattedComments = comments.map(comment => {
+      // Check if photo_data exists and is a buffer
+      if (comment.photo_data instanceof Buffer) {
+        // Convert the buffer to a Base64 string
+        const base64Photo = comment.photo_data.toString('base64');
+        return { ...comment, photo_data: 'data:image/png;base64,' +  base64Photo };
+      }
+      return comment;
+    });
+
+    res.json(formattedComments);
   } catch (error) {
     console.error('Error fetching comments:', error);
     res.status(500).json({ error: 'Failed to retrieve comments.' });
