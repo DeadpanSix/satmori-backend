@@ -12,6 +12,8 @@ const db = knex(knexConfig.development);
 
 // Enable CORS (for Angular localhost:4200)
 app.use(cors());
+app.use(cors({ origin: "https://myfrontend.onrender.com" }));
+
 app.use(bodyParser.json({ limit: '6mb' }));
 
 //  In-memory DB
