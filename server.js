@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+
 const knex = require('knex');
 const knexConfig = require('./knexfile');
 
@@ -8,11 +9,14 @@ const app = express();
 const port = 3000;
 
 // Initialize Knex.js with your development configuration
-const db = knex(knexConfig.development);
+const environment = process.env.NODE_ENV || "development";
+const db = knex(knexConfig[environment]);
 
-// Enable CORS (for Angular localhost:4200)
-app.use(cors());
-app.use(cors({ origin: "https://myfrontend.onrender.com" }));
+module.expoorts = db;
+
+app.use(cors({
+  origin: ["http://localhost:4200", "https://myfrontend.onrender.com"],
+}));
 
 app.use(bodyParser.json({ limit: '6mb' }));
 
@@ -27,7 +31,7 @@ let comments = [
 ]
 
 // Routes
-app.get("/", (req, res) => {
+app.get("/api", (req, res) => {
   res.send("Hello World");
 });
 
