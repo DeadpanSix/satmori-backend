@@ -11,7 +11,9 @@ module.exports = {
       user: process.env.PG_USER,
       password: process.env.PG_PASSWORD,
       database: process.env.PG_DATABASE,
-      ssl: process.env.PG_SSL === "true" ? { rejectUnauthorized: false } : false
+      ssl: {
+        rejectUnauthorized: false
+      }
     },
     migrations: {
       tableName: 'knex_migrations'
@@ -21,7 +23,9 @@ module.exports = {
     client: 'pg',
     connection: {
       connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false }
+      ssl: {
+        rejectUnauthorized: false
+      }
     },
     pool: {
       min: 2,

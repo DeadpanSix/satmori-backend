@@ -12,11 +12,13 @@ const port = 3000;
 const environment = process.env.NODE_ENV || "development";
 const db = knex(knexConfig[environment]);
 
-module.expoorts = db;
+module.exports = db;
 
 app.use(cors({
   origin: ["http://localhost:4200", "https://myfrontend.onrender.com"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 }));
+app.options("*", cors());
 
 app.use(bodyParser.json({ limit: '6mb' }));
 
