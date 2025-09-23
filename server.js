@@ -27,7 +27,11 @@ let comments = [
 ]
 
 // Routes
-app.post('/api/comments/comment', async (req, res) => {
+app.get("/", (req, res) => {
+  res.send("Hello World");
+});
+
+app.post('/api/comment', async (req, res) => {
     // Validate that all required fields are present
   if (!req.body.name || !req.body.rating || !req.body.comment || !req.body.photo) {
     return res.status(400).json({ error: 'Todos los campos son requeridos: nombre, valoración, experiencia y foto.' });
@@ -55,7 +59,7 @@ app.post('/api/comments/comment', async (req, res) => {
 });
 
 // GET ALL comments from the database
-app.get('/api/comments/comments', async (req, res) => {
+app.get('/api/comments', async (req, res) => {
   try {
     const comments = await db('comments').select('*');
 
