@@ -6,13 +6,16 @@ CREATE TABLE IF NOT EXISTS comments (
     user_name VARCHAR(50) NOT NULL,
 
     -- A column for the user's rating, an integer from 1 to 4
-    rating INTEGER CHECK (rating >= 1 AND rating <= 4),
+    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 4),
 
     -- The text content of the comment
     comment_text VARCHAR(50) NOT NULL,
 
-    -- A column to store the photo's binary data (BYTEA)
-    photo_data BYTEA,
+    -- A column to store the photo's raw base64 only
+    photo_data TEXT NOT NULL,
+
+    -- Ex. image/png, image/jpeg, application/pdf}
+    photo_type VARCHAR(255) NOT NULL,
 
     -- A boolean column to track if a comment has been approved
     approved BOOLEAN DEFAULT FALSE,

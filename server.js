@@ -21,41 +21,43 @@ app.use(cors({
 
 app.use(bodyParser.json({ limit: '6mb' }));
 
-//  In-memory DB
-let comments = [
-    { id: 1, name: 'Laura Palmer', rating: 4, photo: 'assets/images/pulso-22-sep.jpg', comment: 'first comment. Lorem ipsum dolor sit amet, consectetuer adipscing elit, sedd diam onumy nibh.' },
-    { id: 2, name: 'Laura Palmer', rating: 3, photo: 'assets/images/pulso-22-sep.jpg', comment: 'second comment. Lorem ipsum dolor sit amet, consectetuer adipscing elit, sedd diam onumy nibh.' },
-    { id: 3, name: 'Laura Palmer', rating: 4, photo: 'assets/images/pulso-22-sep.jpg', comment: 'third comment. Lorem ipsum dolor sit amet, consectetuer adipscing elit, sedd diam onumy nibh.' },
-    { id: 4, name: 'Laura Palmer', rating: 2, photo: 'assets/images/pulso-22-sep.jpg', comment: 'fourth comment. Lorem ipsum dolor sit amet, consectetuer adipscing elit, sedd diam onumy nibh.' },
-    { id: 5, name: 'Laura Palmer', rating: 4, photo: 'assets/images/pulso-22-sep.jpg', comment: 'fifth comment. Lorem ipsum dolor sit amet, consectetuer adipscing elit, sedd diam onumy nibh.' },
-    { id: 6, name: 'Laura Palmer', rating: 4, photo: 'assets/images/pulso-22-sep.jpg', comment: 'sixth comment. Lorem ipsum dolor sit amet, consectetuer adipscing elit, sedd diam onumy nibh.' }
-]
-
 // Routes
 app.get("/api", (req, res) => {
   res.send("Hello World");
 });
 
 app.post('/api/comment', async (req, res) => {
-    // Validate that all required fields are present
-  if (!req.body.name || !req.body.rating || !req.body.comment || !req.body.photo) {
+  const { name, rating, comment, photo } = req.body;
+
+  // Validate required fields
+  if (!name || !rating || !comment || !photo) {
     return res.status(400).json({ error: 'Todos los campos son requeridos: nombre, valoración, experiencia y foto.' });
   }
 
-  // Validate the rating field
-  const rating = parseInt(req.body.rating);
-  if (isNaN(rating) || rating < 1 || rating > 4) {
+  const numericRating = parseInt(rating);
+  if (isNaN(numericRating) || numericRating < 1 || numericRating > 4) {
     return res.status(400).json({ error: 'Valoración debe estar entre rango 1 y 4.' });
   }
 
   try {
+    // Extract MIME type and raw base64 from the string
+    const match = photo.match(/^data:(.+);base64,(.*)$/);
+    if (!match) {
+      return res.status(400).json({ error: 'Formato de foto inválido.' });
+    }
+
+    const mimeType = match[1];     // e.g. "image/png", "image/jpeg", "application/pdf"
+    const base64Data = match[2];   // raw base64 only
+
     const [newComment] = await db('comments').insert({
-      user_name: req.body.name,
-      rating: parseInt(req.body.rating),
-      comment_text: req.body.comment,
-      photo_data: req.body.photo
+      user_name: name,
+      rating: numericRating,
+      comment_text: comment,
+      photo_data: base64Data,   // store only the base64 string
+      photo_type: mimeType      // ⚡ store MIME type so you can rebuild the prefix later
     }).returning('*');
 
+    console.log(newComment);
     res.status(201).json(newComment);
   } catch (error) {
     console.error('Error inserting comment:', error);
@@ -68,13 +70,12 @@ app.get('/api/comments', async (req, res) => {
   try {
     const comments = await db('comments').select('*');
 
-    // Convert the binary data (photo_data) to a Base64 string
     const formattedComments = comments.map(comment => {
-      // Check if photo_data exists and is a buffer
-      if (comment.photo_data instanceof Buffer) {
-        // Convert the buffer to a Base64 string
-        const base64Photo = comment.photo_data.toString('base64');
-        return { ...comment, photo_data: 'data:image/png;base64,' +  base64Photo };
+      if (comment.photo_data) {
+        return {
+          ...comment,
+          photo_data: `data:${comment.photo_type};base64,${comment.photo_data}`
+        };
       }
       return comment;
     });
