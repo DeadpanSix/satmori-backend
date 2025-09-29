@@ -28,40 +28,53 @@ app.get("/api", (req, res) => {
 
 app.post('/api/comment', async (req, res) => {
   const { name, rating, comment, photo } = req.body;
+  const numericRating = parseInt(rating);
 
-  // Validate required fields
-  if (!name || !rating || !comment || !photo) {
-    return res.status(400).json({ error: 'Todos los campos son requeridos: nombre, valoración, experiencia y foto.' });
+  // Validate required fields individually
+  if (!name) {
+    return res.status(400).json({ error: 'Nombre requerido.' });
+  } else if (name.length > 50) {
+    return res.status(400).json({ error: 'El nombre no puede exceder 50 caracteres.' });
+  }
+  if (!rating) {
+    return res.status(400).json({ error: 'Valoración requerida.' });
+  } else if (isNaN(numericRating) || numericRating < 1 || numericRating > 4) {
+    return res.status(400).json({ error: 'Valoración debe estar entre rango 1 y 4.' });
+  }
+  if (!comment) {
+    return res.status(400).json({ error: 'Experiencia/comentario requerido.' });
+  } else if (comment.length > 150) {
+  return res.status(400).json({ error: 'El comentario no puede exceder 150 caracteres.' });
+}
+  if (!photo) {
+    return res.status(400).json({ error: 'Foto requerida.' });
   }
 
-  const numericRating = parseInt(rating);
-  if (isNaN(numericRating) || numericRating < 1 || numericRating > 4) {
-    return res.status(400).json({ error: 'Valoración debe estar entre rango 1 y 4.' });
+  // Extract MIME type and raw base64 from the string
+  const match = photo.match(/^data:(.+);base64,(.*)$/);
+  if (!match) {
+    return res.status(400).json({ error: 'Formato de foto inválido.' });
+  }
+
+  const mimeType = match[1].toLowerCase();
+  const base64Data = match[2];
+
+  if (!['image/jpeg', 'image/jpg', 'image/png'].includes(mimeType)) {
+    return res.status(400).json({ error: 'Solo se permiten imágenes JPEG, JPG o PNG.' });
   }
 
   try {
-    // Extract MIME type and raw base64 from the string
-    const match = photo.match(/^data:(.+);base64,(.*)$/);
-    if (!match) {
-      return res.status(400).json({ error: 'Formato de foto inválido.' });
-    }
-
-    const mimeType = match[1];     // e.g. "image/png", "image/jpeg", "application/pdf"
-    const base64Data = match[2];   // raw base64 only
-
     const [newComment] = await db('comments').insert({
       user_name: name,
       rating: numericRating,
       comment_text: comment,
-      photo_data: base64Data,   // store only the base64 string
-      photo_type: mimeType      // ⚡ store MIME type so you can rebuild the prefix later
+      photo_data: base64Data,
+      photo_type: mimeType
     }).returning('*');
 
-    console.log(newComment);
     res.status(201).json(newComment);
   } catch (error) {
-    console.error('Error inserting comment:', error);
-    res.status(500).json({ error: 'Failed to add comment.' });
+    res.status(500).json({ error: 'No se pudo enviar tu comentario.' });
   }
 });
 

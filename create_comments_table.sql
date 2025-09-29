@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS comments (
     rating INT NOT NULL CHECK (rating >= 1 AND rating <= 4),
 
     -- The text content of the comment
-    comment_text VARCHAR(50) NOT NULL,
+    comment_text VARCHAR(150) NOT NULL,
 
     -- A column to store the photo's raw base64 only
     photo_data TEXT NOT NULL,
