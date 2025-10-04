@@ -1,7 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
-
 const knex = require('knex');
 const knexConfig = require('./knexfile');
 
@@ -19,7 +17,7 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 }));
 
-app.use(bodyParser.json({ limit: '6mb' }));
+app.use(express.json({ limit: '10mb' }));
 
 // Routes
 app.get("/api", (req, res) => {
@@ -43,8 +41,8 @@ app.post('/api/comment', async (req, res) => {
   }
   if (!comment) {
     return res.status(400).json({ error: 'Experiencia/comentario requerido.' });
-  } else if (comment.length > 150) {
-  return res.status(400).json({ error: 'El comentario no puede exceder 150 caracteres.' });
+  } else if (comment.length > 200) {
+  return res.status(400).json({ error: 'El comentario no puede exceder 200 caracteres.' });
 }
   if (!photo) {
     return res.status(400).json({ error: 'Foto requerida.' });
@@ -61,6 +59,12 @@ app.post('/api/comment', async (req, res) => {
 
   if (!['image/jpeg', 'image/jpg', 'image/png'].includes(mimeType)) {
     return res.status(400).json({ error: 'Solo se permiten imágenes JPEG, JPG o PNG.' });
+  }
+
+  const maxBase64Size = 10 * 1024 * 1024; // 10 MB
+  const base64Length = Buffer.byteLength(base64Data, 'base64');
+  if (base64Length > maxBase64Size) {
+    return res.status(400).json({ error: 'La foto excede el tamaño máximo permitido (6 MB).' });
   }
 
   try {
