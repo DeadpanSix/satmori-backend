@@ -64,7 +64,7 @@ app.post('/api/comment', async (req, res) => {
   const maxBase64Size = 10 * 1024 * 1024; // 10 MB
   const base64Length = Buffer.byteLength(base64Data, 'base64');
   if (base64Length > maxBase64Size) {
-    return res.status(400).json({ error: 'La foto excede el tamaño máximo permitido (6 MB).' });
+    return res.status(400).json({ error: 'La foto excede el tamaño máximo permitido (10 MB).' });
   }
 
   try {
@@ -76,8 +76,16 @@ app.post('/api/comment', async (req, res) => {
       photo_type: mimeType
     }).returning('*');
 
-    res.status(201).json(newComment);
+    return res.status(201).json({
+      message: 'Comentario creado correctamente.',
+      comment: {
+        user_name: newComment.user_name,
+        rating: newComment.rating,
+        comment_text: newComment.comment_text
+      }
+    });
   } catch (error) {
+    console.error('Database insert failed: ', error);
     res.status(500).json({ error: 'No se pudo enviar tu comentario.' });
   }
 });
