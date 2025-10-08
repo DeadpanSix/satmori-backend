@@ -4,11 +4,10 @@ const knex = require('knex');
 const knexConfig = require('./knexfile');
 
 const app = express();
-const port = 3000;
-
-// Initialize Knex.js with your development configuration
 const environment = process.env.NODE_ENV || "development";
 const db = knex(knexConfig[environment]);
+
+const port = 3000;
 
 module.exports = db;
 
