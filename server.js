@@ -89,22 +89,20 @@ app.post('/api/comment', async (req, res) => {
   }
 });
 
-// GET ALL comments from the database
+app.get('/api/comments/all', async (req, res) => {
+  try {
+    const result = await db.raw('SELECT * FROM get_all_comments()');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ error: 'Failed to retrieve comments.' });
+  }
+});
+
 app.get('/api/comments', async (req, res) => {
   try {
-    const comments = await db('comments').select('*');
-
-    const formattedComments = comments.map(comment => {
-      if (comment.photo_data) {
-        return {
-          ...comment,
-          photo_data: `data:${comment.photo_type};base64,${comment.photo_data}`
-        };
-      }
-      return comment;
-    });
-
-    res.json(formattedComments);
+    const result = await db.raw('SELECT * FROM get_approved_comments()');
+    res.json(result.rows);
   } catch (error) {
     console.error('Error fetching comments:', error);
     res.status(500).json({ error: 'Failed to retrieve comments.' });
