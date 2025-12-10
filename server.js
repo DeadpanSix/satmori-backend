@@ -89,9 +89,9 @@ app.post('/api/comment', async (req, res) => {
   }
 });
 
-app.get('/api/comments/all', async (req, res) => {
+app.get('/api/comments/not-approved', async (req, res) => {
   try {
-    const result = await db.raw('SELECT * FROM get_all_comments()');
+    const result = await db.raw('SELECT * FROM get_not_approved_comments()');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching comments:', error);
