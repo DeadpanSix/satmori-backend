@@ -1,112 +1,24 @@
 const express = require('express');
 const cors = require('cors');
-const knex = require('knex');
-const knexConfig = require('./knexfile');
+const commentsRoutes = require('./src/routes/comments.routes');
+const authRoutes = require('./src/routes/auth.routes');
 
 const app = express();
-const environment = process.env.NODE_ENV || "development";
-const db = knex(knexConfig[environment]);
-
-const port = 3000;
-
-module.exports = db;
+const port = process.env.PORT || 3000;
 
 app.use(cors({
-  origin: ["http://localhost:4200", "https://www.satmori.com"],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  origin: ['http://localhost:4200', 'https://www.satmori.com'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 }));
 
 app.use(express.json({ limit: '10mb' }));
 
-// Routes
-app.get("/api", (req, res) => {
-  res.send("Hello World");
-});
+app.get('/api', (req, res) => res.send('Hello World'));
+app.use('/api', authRoutes);
+app.use('/api', commentsRoutes);
 
-app.post('/api/comment', async (req, res) => {
-  const { name, rating, comment, photo } = req.body;
-  const numericRating = parseInt(rating);
-
-  // Validate required fields individually
-  if (!name) {
-    return res.status(400).json({ error: 'Nombre requerido.' });
-  } else if (name.length > 50) {
-    return res.status(400).json({ error: 'El nombre no puede exceder 50 caracteres.' });
-  }
-  if (!rating) {
-    return res.status(400).json({ error: 'Valoración requerida.' });
-  } else if (isNaN(numericRating) || numericRating < 1 || numericRating > 4) {
-    return res.status(400).json({ error: 'Valoración debe estar entre rango 1 y 4.' });
-  }
-  if (!comment) {
-    return res.status(400).json({ error: 'Experiencia/comentario requerido.' });
-  } else if (comment.length > 200) {
-  return res.status(400).json({ error: 'El comentario no puede exceder 200 caracteres.' });
-}
-  if (!photo) {
-    return res.status(400).json({ error: 'Foto requerida.' });
-  }
-
-  // Extract MIME type and raw base64 from the string
-  const match = photo.match(/^data:(.+);base64,(.*)$/);
-  if (!match) {
-    return res.status(400).json({ error: 'Formato de foto inválido.' });
-  }
-
-  const mimeType = match[1].toLowerCase();
-  const base64Data = match[2];
-
-  if (!['image/jpeg', 'image/jpg', 'image/png'].includes(mimeType)) {
-    return res.status(400).json({ error: 'Solo se permiten imágenes JPEG, JPG o PNG.' });
-  }
-
-  const maxBase64Size = 10 * 1024 * 1024; // 10 MB
-  const base64Length = Buffer.byteLength(base64Data, 'base64');
-  if (base64Length > maxBase64Size) {
-    return res.status(400).json({ error: 'La foto excede el tamaño máximo permitido (10 MB).' });
-  }
-
-  try {
-    const [newComment] = await db('comments').insert({
-      user_name: name,
-      rating: numericRating,
-      comment_text: comment,
-      photo_data: base64Data,
-      photo_type: mimeType
-    }).returning('*');
-
-    return res.status(201).json({
-      message: 'Comentario creado correctamente.',
-      comment: {
-        user_name: newComment.user_name,
-        rating: newComment.rating,
-        comment_text: newComment.comment_text
-      }
-    });
-  } catch (error) {
-    console.error('Database insert failed: ', error);
-    res.status(500).json({ error: 'No se pudo enviar tu comentario.' });
-  }
-});
-
-app.get('/api/comments/not-approved', async (req, res) => {
-  try {
-    const result = await db.raw('SELECT * FROM get_not_approved_comments()');
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error fetching comments:', error);
-    res.status(500).json({ error: 'Failed to retrieve comments.' });
-  }
-});
-
-app.get('/api/comments', async (req, res) => {
-  try {
-    const result = await db.raw('SELECT * FROM get_approved_comments()');
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error fetching comments:', error);
-    res.status(500).json({ error: 'Failed to retrieve comments.' });
-  }
+app.listen(port, () => {
+  console.log(`✅ Server running at http://localhost:${port}`);
 });
 
 // GET by ID
@@ -136,8 +48,3 @@ app.get('/api/comments', async (req, res) => {
 //   }
 //   res.status(204).send();
 // });
-
-// Start server
-app.listen(port, () => {
-  console.log(`✅ Server running at http://localhost:${port}`);
-});

@@ -13,7 +13,8 @@ module.exports = {
       }
     },
     migrations: {
-      tableName: 'knex_migrations'
+      tableName: 'knex_migrations',
+      directory: './src/db/migrations'
     }
   },
   production: {
@@ -29,7 +30,8 @@ module.exports = {
       max: 10
     },
     migrations: {
-      tableName: 'knex_migrations'
+      tableName: 'knex_migrations',
+      directory: './src/db/migrations'
     }
   }
 };
