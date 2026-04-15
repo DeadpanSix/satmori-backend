@@ -1,11 +1,11 @@
 const { Router } = require('express');
-const { authMiddleware } = require('../middlewares/auth.middleware');
-const { postComment, getApprovedComments, getNotApprovedComments } = require('../controllers/comments.controller');
+const controller = require('../controllers/comments.controller');
+const { verifyToken } = require('../middlewares/auth.middleware');
 
 const router = Router();
 
-router.post('/comment', postComment);
-router.get('/comments', getApprovedComments);
-router.get('/comments/not-approved', authMiddleware, getNotApprovedComments);
+router.post('/comment', controller.postComment);
+router.get('/comments', controller.getApprovedComments);
+router.get('/comments/not-approved', verifyToken, controller.getNotApprovedComments);
 
 module.exports = router;
