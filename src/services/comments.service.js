@@ -1,4 +1,10 @@
-const { insertComment, getApprovedComments, getNotApprovedComments } = require('../db/queries/comments.queries');
+const {
+  insertComment,
+  getApprovedComments,
+  getNotApprovedComments,
+  getAllComments,
+  toggleComment
+} = require('../db/queries/comments.queries');
 
 const validateAndParsePhoto = (photo) => {
   const match = photo.match(/^data:(.+);base64,(.*)$/);
@@ -47,8 +53,15 @@ const createComment = async ({ name, rating, comment, photo }) => {
   };
 };
 
-const fetchApprovedComments = async () => getApprovedComments();
+const fetchApprovedComments     = async () => getApprovedComments();
+const fetchNotApprovedComments  = async () => getNotApprovedComments();
+const fetchAllComments          = async () => getAllComments();
+const updateToggleComment       = async (id, approved) => toggleComment(id, approved);
 
-const fetchNotApprovedComments = async () => getNotApprovedComments();
-
-module.exports = { createComment, fetchApprovedComments, fetchNotApprovedComments };
+module.exports = {
+  createComment,
+  fetchApprovedComments,
+  fetchNotApprovedComments,
+  fetchAllComments,
+  updateToggleComment
+};

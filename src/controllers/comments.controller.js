@@ -1,4 +1,10 @@
-const { createComment, fetchApprovedComments, fetchNotApprovedComments } = require('../services/comments.service');
+const {
+  createComment,
+  fetchApprovedComments,
+  fetchNotApprovedComments,
+  fetchAllComments,
+  updateToggleComment
+} = require('../services/comments.service');
 
 const postComment = async (req, res) => {
   try {
@@ -29,4 +35,34 @@ const getNotApprovedComments = async (req, res) => {
   }
 };
 
-module.exports = { postComment, getApprovedComments, getNotApprovedComments };
+const getAllComments = async (req, res) => {
+  try {
+    const comments = await fetchAllComments();
+    res.json(comments);
+  } catch (err) {
+    res.status(500).json({ message: 'Error al obtener comentarios' });
+  }
+};
+
+const toggleComment = async (req, res) => {
+  const { id }       = req.params;
+  const { approved } = req.body;
+
+  try {
+    const comment = await updateToggleComment(id, approved);
+    if (!comment) {
+      return res.status(404).json({ message: 'Comentario no encontrado' });
+    }
+    res.json(comment);
+  } catch (err) {
+    res.status(500).json({ message: 'Error al actualizar comentario' });
+  }
+};
+
+module.exports = {
+  postComment,
+  getApprovedComments,
+  getNotApprovedComments,
+  getAllComments,
+  toggleComment
+};
