@@ -4,8 +4,13 @@ const { verifyToken } = require('../middlewares/auth.middleware');
 
 const router = Router();
 
-router.post('/comments', controller.postComment);
-router.get('/comments', controller.getApprovedComments);
-router.get('/comments/not-approved', verifyToken, controller.getNotApprovedComments);
+// - PUBLIC --------------------------------------------------------------------
+router.get('/', controller.getApprovedComments);
+router.post('/', controller.postComment);
+
+// - ADMIN ---------------------------------------------------------------------
+router.get('/admin',        verifyToken, controller.getAllComments);
+router.put('/admin/:id',    verifyToken, controller.toggleComment);
+router.get('/admin/not-approved', verifyToken, controller.getNotApprovedComments);
 
 module.exports = router;
