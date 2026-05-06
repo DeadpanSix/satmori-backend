@@ -1,4 +1,3 @@
-// Load environment variables from the .env file in development
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
