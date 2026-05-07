@@ -47,6 +47,14 @@ CREATE TABLE response_answers (
   answer      TEXT NOT NULL
 );
 
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'admin' CHECK (role IN ('admin', 'superadmin')),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
 INSERT INTO questions (text, "order") VALUES
   ('¿Cómo conociste nuestra comunidad?',          1),
   ('¿Qué es lo que más te atrae de nuestros eventos?', 2),
