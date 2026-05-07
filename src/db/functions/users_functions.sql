@@ -1,21 +1,29 @@
-DROP FUNCTION get_user_by_email(VARCHAR);
+DROP FUNCTION IF EXISTS public.get_user_by_email(character varying);
 
-CREATE OR REPLACE FUNCTION get_user_by_email(p_email VARCHAR)
-  RETURNS TABLE (
-    id            INT,
-    email         VARCHAR,
-    password_hash VARCHAR,
-    role          text,
-    created_at    TIMESTAMP WITH TIME ZONE
-  ) AS $$
-  BEGIN
-    RETURN QUERY
-    SELECT u.id, u.email, u.password_hash, u.role::text, u.created_at
-    FROM users u
-    WHERE u.email = p_email
-    LIMIT 1;
-  END;
-  $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION public.get_user_by_email(
+	p_email character varying)
+    RETURNS TABLE(
+      id integer,
+      email character varying,
+      password_hash character varying,
+      role character varying,
+      created_at timestamp without time zone
+    )
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+    ROWS 1000
 
-  ALTER FUNCTION get_user_by_email(VARCHAR)
+  AS $BODY$
+    BEGIN
+      RETURN QUERY
+      SELECT u.id, u.email, u.password_hash, u.role::character varying, u.created_at
+      FROM users u
+      WHERE u.email = p_email
+      LIMIT 1;
+    END;
+
+  $BODY$;
+
+  ALTER FUNCTION public.get_user_by_email(character varying)
     OWNER TO master_db;
